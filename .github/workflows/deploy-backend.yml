@@ -1,0 +1,38 @@
+name: Deploy Backend to Cloud Run
+
+on:
+  push:
+    branches: [main]
+    paths: ["backend/**"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build and push Docker image
+        run: |
+          gcloud builds submit backend/ \
+            --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/crisisshield-backend
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy crisisshield-backend \
+            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/crisisshield-backend \
+            --platform managed \
+            --region asia-south1 \
+            --allow-unauthenticated \
+            --set-env-vars GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
+            --set-env-vars SARVAM_API_KEY=${{ secrets.SARVAM_API_KEY }} \
+            --set-env-vars FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }} \
+            --set-env-vars FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }} \
+            --set-env-vars "FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}"
