@@ -1,4 +1,5 @@
 import json
+import asyncio
 from core.gemini import get_model
 
 
@@ -76,5 +77,6 @@ async def generate_report(
         guests_evacuated=guests_evacuated,
         guests_total=guests_total,
     )
-    response = model.generate_content(prompt)
+    # Run the blocking Gemini call in a separate thread
+    response = await asyncio.to_thread(model.generate_content, prompt)
     return json.loads(response.text)

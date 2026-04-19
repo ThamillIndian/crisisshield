@@ -5,6 +5,9 @@ from core.gemini import get_model
 COMMUNICATION_PROMPT = """
 You are a multilingual emergency communication AI for a hotel in India.
 
+[SITE-SPECIFIC KNOWLEDGE]:
+{knowledge_context}
+
 Emergency:
 - Type: {incident_type}
 - Severity: {severity}
@@ -15,7 +18,7 @@ Evacuation Instructions:
 Target Audience: {role} (guest | staff | admin)
 Target Language Code: {language}
 
-Generate a clear, calm, role-appropriate emergency message.
+Generate a clear, calm, role-appropriate emergency message. Use the site-specific knowledge (like assembly points or protocol details) if they improve the message's clarity or accuracy.
 
 Respond ONLY with valid JSON:
 {{
@@ -23,13 +26,6 @@ Respond ONLY with valid JSON:
   "message_local": "<message translated to the target language>",
   "urgency": "high" | "medium" | "low"
 }}
-
-Guidelines:
-- For guests: simple, reassuring, step-by-step
-- For staff: direct, task-focused, professional
-- For admin: comprehensive situational update
-- Keep messages concise (2-3 sentences max)
-- Translate accurately to the target language
 """
 
 
@@ -39,9 +35,11 @@ async def generate_message(
     route_instructions: str,
     role: str,
     language: str,
+    knowledge_context: str = "",
 ) -> dict:
     model = get_model()
     prompt = COMMUNICATION_PROMPT.format(
+        knowledge_context=knowledge_context,
         incident_type=incident_type,
         severity=severity,
         route_instructions=route_instructions,

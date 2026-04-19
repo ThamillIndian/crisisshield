@@ -36,10 +36,13 @@ export default function GuestHomePage() {
         language,
         userId: user?.id,
         hotelId: user?.hotelId,
-        floor: user?.floor,
-        room: user?.roomNumber,
+        floor: user?.floor || 1,
+        room: user?.roomNumber || "101",
       });
       router.push(`/guest/evacuation?incidentId=${res.incidentId}`);
+    } catch (err: unknown) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : "Failed to send emergency report. Please try again or find help immediately.");
     } finally {
       setLoading(false);
     }
@@ -55,10 +58,13 @@ export default function GuestHomePage() {
         language,
         userId: user?.id,
         hotelId: user?.hotelId,
-        floor: user?.floor,
-        room: user?.roomNumber,
+        floor: user?.floor || 1,
+        room: user?.roomNumber || "101",
       });
       router.push(`/guest/evacuation?incidentId=${res.incidentId}`);
+    } catch (err: unknown) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : "Failed to send emergency report. Please try again.");
     } finally {
       setLoading(false);
     }

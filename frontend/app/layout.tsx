@@ -9,10 +9,14 @@ export const metadata: Metadata = {
   description: "AI-powered emergency response for hospitality venues",
 };
 
+import AuthProvider from "@/components/providers/AuthProvider";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${geist.className} bg-gray-50 min-h-screen`}>{children}</body>
+      <body className={`${geist.className} bg-gray-50 min-h-screen`}>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

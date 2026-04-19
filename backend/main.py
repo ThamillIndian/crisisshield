@@ -5,7 +5,8 @@ from core.config import settings
 from core.firebase_admin import init_firebase
 from core.gemini import init_gemini
 
-from routers import incidents, tasks, notifications, voice, reports
+# Import all routers at once to avoid redundancy
+from routers import incidents, tasks, notifications, voice, reports, hotels
 
 app = FastAPI(
     title="CrisisShield API",
@@ -35,7 +36,7 @@ app.include_router(tasks.router)
 app.include_router(notifications.router)
 app.include_router(voice.router)
 app.include_router(reports.router)
-
+app.include_router(hotels.router)
 
 @app.get("/health")
 async def health():

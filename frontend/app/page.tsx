@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { auth, db, googleProvider } from "@/lib/firebase";
 import { useAuthStore } from "@/store/authStore";
+import Link from "next/link";
+import { FcGoogle } from "react-icons/fc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShieldAlert, Loader2 } from "lucide-react";
@@ -34,6 +36,41 @@ export default function LoginPage() {
       else router.push("/guest");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Login failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleGoogleLogin() {
+    setError("");
+    setLoading(true);
+    try {
+      const cred = await signInWithPopup(auth, googleProvider);
+      let snap = await getDoc(doc(db, "users", cred.user.uid));
+      
+      if (!snap.exists()) {
+        const newUser = {
+          role: "guest",
+          email: cred.user.email || "",
+          name: cred.user.displayName || "",
+          hotelId: "demo-hotel-001",
+          language: "en",
+          roomNumber: "101",
+          floor: 1,
+          createdAt: new Date().toISOString()
+        };
+        await setDoc(doc(db, "users", cred.user.uid), newUser);
+        snap = await getDoc(doc(db, "users", cred.user.uid));
+      }
+      
+      const user = { id: snap.id, ...snap.data() } as AppUser;
+      setUser(user);
+      
+      if (user.role === "admin") router.push("/admin");
+      else if (user.role === "staff") router.push("/staff");
+      else router.push("/guest");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Google Login failed.");
     } finally {
       setLoading(false);
     }
@@ -99,6 +136,34 @@ export default function LoginPage() {
                   "Sign In"
                 )}
               </Button>
+
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-slate-700"></span>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-slate-800 px-2 text-slate-400">Or continue with</span>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full border-slate-600 bg-transparent text-white hover:bg-slate-700"
+                size="lg"
+                onClick={handleGoogleLogin}
+                disabled={loading}
+              >
+                <FcGoogle className="mr-2 h-5 w-5" />
+                Google
+              </Button>
+
+              <div className="text-center mt-4 text-sm text-slate-400">
+                Don&apos;t have an account?{" "}
+                <Link href="/signup" className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                  Sign up
+                </Link>
+              </div>
             </form>
           </CardContent>
         </Card>

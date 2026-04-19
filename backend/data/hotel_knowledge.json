@@ -1,0 +1,44 @@
+{
+  "demo-hotel-001": {
+    "hotelName": "Grand Heritage Resort Chennai",
+    "protocols": {
+      "fire": "1. Sound alarm immediately. 2. Evacuate guests via Staircase A (East) and Staircase B (West). 3. Assembly Point is the Main Garden (North side). 4. Do NOT use elevators. 5. Staff to use extinguishers only if fire is smaller than a wastebasket.",
+      "medical": "1. Contact on-duty doctor via Ext 104. 2. Bring First Aid Kit from Front Desk. 3. If chest pain/unconscious, call Apollo Hospital (1066) immediately via external line. 4. Clear the corridor for stretcher access.",
+      "security": "1. Lock all floor access doors. 2. Instruct guests to shelter in place and stay away from windows. 3. Security team to converge at the affected floor. 4. Contact nearest Police Station (044-2345XXXX)."
+    },
+    "equipment_mapping": {
+      "extinguishers": [
+        {"location": "Every 20 meters in guest corridors", "type": "ABC Powder"},
+        {"location": "Next to Staircase A on every floor", "type": "Co2"},
+        {"location": "Kitchen Area (Ground Floor)", "type": "Wet Chemical"}
+      ],
+      "aeds": [
+        {"location": "Lobby Level, Reception Desk Desk", "notes": "Behind the counter"},
+        {"location": "Gym (3rd Floor), Entry door", "notes": "Mounted on the wall"}
+      ],
+      "firstAidKits": [
+        {"location": "Front Desk (Lobby)", "notes": "Comprehensive trauma kit"},
+        {"location": "Pool Area (Ground Floor)", "notes": "Basic kit + waterproof supplies"},
+        {"location": "Housekeeping Hub (Every Floor)", "notes": "Minor injury kit"}
+      ]
+    },
+    "emergency_contacts": {
+      "internal": {
+        "security": "Ext 55",
+        "medical": "Ext 104",
+        "reception": "Ext 0"
+      },
+      "external": {
+        "fire": "101",
+        "ambulance": "108",
+        "apollo_chennai": "1066",
+        "police": "100"
+      }
+    },
+    "facility_info": {
+      "assemblyPoint": "Main Garden (North Side)",
+      "totalFloors": 5,
+      "staircases": ["Staircase A (East Wing)", "Staircase B (West Wing)"]
+    }
+  }
+}

@@ -9,10 +9,12 @@ import type { EvacuationRoute } from "@/types/route";
 import { useAuthStore } from "@/store/authStore";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Flame, HeartPulse, ShieldAlert, CheckCircle, AlertTriangle,
-  MapPin, Clock, ChevronRight,
+  MapPin, Clock, ChevronRight, ArrowLeft
 } from "lucide-react";
+import Link from "next/link";
 
 const INCIDENT_ICONS = {
   fire: <Flame className="h-5 w-5 text-red-400" />,
@@ -86,9 +88,16 @@ export default function EvacuationPage() {
       </AnimatePresence>
 
       {isResolved && (
-        <div className="bg-green-600 px-4 py-3 flex items-center gap-2">
-          <CheckCircle className="h-5 w-5" />
-          <span className="font-semibold">All Clear — Emergency Resolved</span>
+        <div className="bg-green-600 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-5 w-5" />
+            <span className="font-semibold">All Clear — Emergency Resolved</span>
+          </div>
+          <Link href="/guest">
+            <Button size="sm" variant="outline" className="bg-white/20 border-white/30 text-white hover:bg-white/30">
+              Return to Home
+            </Button>
+          </Link>
         </div>
       )}
 
@@ -187,6 +196,15 @@ export default function EvacuationPage() {
             </CardContent>
           </Card>
         )}
+        {/* Navigation button at the bottom */}
+        <div className="pt-4 pb-12">
+          <Link href="/guest" className="block">
+            <Button className="w-full h-12 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Return to Dashboard
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   );

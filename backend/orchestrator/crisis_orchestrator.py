@@ -15,6 +15,7 @@ from services.firestore_service import (
     add_timeline_event,
 )
 from services.fcm_service import notify_user, notify_hotel_staff
+from services.knowledge_service import knowledge_service
 from models.incident import ReportIncidentRequest
 
 
@@ -56,6 +57,7 @@ async def handle_new_incident(req: ReportIncidentRequest) -> str:
         "type": classification.type,
         "severity": classification.severity,
         "confidence": classification.confidence,
+        "classificationTimeMs": classification_ms,
     })
     await add_timeline_event(
         incident_id,
@@ -63,9 +65,15 @@ async def handle_new_incident(req: ReportIncidentRequest) -> str:
         f"(confidence: {int(classification.confidence * 100)}%)"
     )
 
-    # ── Step 3: Get hotel data ────────────────────────────────────────
+    # ── Step 3: Get hotel data & Knowledge Base ──────────────────────
     staff_list = await get_hotel_staff(req.hotelId)
     floor_data = await get_hotel_floor_data(req.hotelId, req.floor)
+    
+    # Get Site-Specific Grounding for the LLM
+    knowledge_context = await knowledge_service.get_context_for_incident(
+        hotel_id=req.hotelId, 
+        incident_type=classification.type
+    )
 
     # ── Step 4: Resource Allocation Agent ────────────────────────────
     assignments = await allocate_resources(
@@ -75,6 +83,7 @@ async def handle_new_incident(req: ReportIncidentRequest) -> str:
         room=req.room,
         summary=classification.summary_en,
         staff_list=staff_list,
+        knowledge_context=knowledge_context  # Pass knowledge here
     )
 
     for assignment in assignments:
@@ -140,6 +149,7 @@ async def handle_new_incident(req: ReportIncidentRequest) -> str:
         route_instructions=route_instructions,
         role="guest",
         language=req.language,
+        knowledge_context=knowledge_context  # Pass knowledge here
     )
     await notify_user(
         user_id=req.userId,
