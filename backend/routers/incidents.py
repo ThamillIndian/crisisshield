@@ -26,6 +26,7 @@ async def report_incident(req: ReportIncidentRequest):
                 detail=f"User isolation mismatch: User profile hotelId ({user_profile.get('hotelId')}) does not match report hotelId ({req.hotelId})"
             )
 
+        print(f"\n[TEXT REPORT] Incoming emergency content: \"{req.rawInput}\"")
         incident_id = await handle_new_incident(req)
         return {"incidentId": incident_id, "status": "processing"}
     except HTTPException:

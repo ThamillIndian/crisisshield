@@ -15,6 +15,7 @@ import {
   MapPin, Clock, ChevronRight, ArrowLeft
 } from "lucide-react";
 import Link from "next/link";
+import { SafetyHUDMap } from "@/components/SafetyHUDMap";
 
 const INCIDENT_ICONS = {
   fire: <Flame className="h-5 w-5 text-red-400" />,
@@ -113,14 +114,32 @@ export default function EvacuationPage() {
           </CardContent>
         </Card>
 
-        {/* Evacuation Route */}
+        {/* Evacuation Route / Support Instructions */}
         {route ? (
-          <Card className="bg-slate-800 border-slate-700">
+          <Card className="bg-slate-800 border-slate-700 overflow-hidden shadow-2xl">
+            {/* The Interactive HUD Map */}
+            <div className="p-2 border-b border-slate-700/50 bg-slate-900/50">
+              <SafetyHUDMap 
+                path={route.path as any[]} 
+                spatialData={route.spatialData ?? {
+                  guestPos: { x: 50, y: 50 },
+                  exitPos: null,
+                  dangerPos: null
+                }}
+                isMedical={incident.type === "medical"}
+              />
+            </div>
+
             <CardContent className="pt-4 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="font-bold text-lg">Safe Evacuation Route</h2>
+                <h2 className="font-bold text-lg">
+                  {route.path.length > 0 ? "Safe Evacuation Route" : "Incident Support & Info"}
+                </h2>
                 {route.isBlocked && (
                   <Badge variant="destructive">Route Updated</Badge>
+                )}
+                {route.path.length === 0 && (
+                  <Badge variant="outline" className="text-blue-400 border-blue-400">Shelter-in-Place</Badge>
                 )}
               </div>
 
@@ -131,48 +150,72 @@ export default function EvacuationPage() {
                 </div>
               )}
 
-              <div className="space-y-2">
-                {route.path.map((step, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="flex items-start gap-3"
-                  >
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold">
-                      {step.step}
-                    </div>
-                    <div className="flex-1 flex items-center gap-2 rounded-lg bg-slate-700 px-3 py-2">
-                      <p className="text-sm text-white">{step.instruction}</p>
-                      {idx < route.path.length - 1 && (
-                        <ChevronRight className="h-4 w-4 text-slate-400 ml-auto shrink-0" />
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+              {route.path.length > 0 ? (
+                <div className="space-y-2">
+                  {route.path.map((step, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="flex items-start gap-3"
+                    >
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold">
+                        {step.step}
+                      </div>
+                      <div className="flex-1 flex items-center gap-2 rounded-lg bg-slate-700 px-3 py-2">
+                        <p className="text-sm text-white">{step.instruction}</p>
+                        {idx < route.path.length - 1 && (
+                          <ChevronRight className="h-4 w-4 text-slate-400 ml-auto shrink-0" />
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-slate-700/50 rounded-xl p-4 border border-slate-600 space-y-3">
+                   <div className="flex items-center gap-2 text-blue-400">
+                     <CheckCircle className="h-5 w-5" />
+                     <span className="font-semibold">Help is on the way</span>
+                   </div>
+                   <p className="text-slate-200 text-sm leading-relaxed">
+                     An evacuation is not required for this incident. Staff have been alerted to your location 
+                     (Room {user?.roomNumber}) and are dispatched to assist you immediately.
+                   </p>
+                   <p className="text-slate-400 text-xs italic">
+                     Please stay calm and keep this screen open for live updates.
+                   </p>
+                </div>
+              )}
 
-              <div className="flex items-center gap-2 pt-1">
-                <Clock className="h-4 w-4 text-slate-400" />
-                <span className="text-sm text-slate-400">
-                  Estimated time: ~{Math.round(route.estimatedTimeSeconds / 60)} min
-                </span>
-                <span className="ml-auto text-sm text-green-400 font-medium">
-                  Exit {route.exitUsed} ✓
-                </span>
-              </div>
+              {route.path.length > 0 && (
+                <div className="flex items-center gap-2 pt-1">
+                  <Clock className="h-4 w-4 text-slate-400" />
+                  <span className="text-sm text-slate-400">
+                    Estimated time: ~{Math.round(route.estimatedTimeSeconds / 60)} min
+                  </span>
+                  <span className="ml-auto text-sm text-green-400 font-medium">
+                    Exit {route.exitUsed} ✓
+                  </span>
+                </div>
+              )}
             </CardContent>
           </Card>
         ) : (
           <Card className="bg-slate-800 border-slate-700">
             <CardContent className="pt-4 flex items-center gap-3">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                className="h-5 w-5 rounded-full border-2 border-indigo-400 border-t-transparent"
-              />
-              <p className="text-slate-300">Calculating safest evacuation route...</p>
+              {(incident.type === "fire" || incident.severity === "critical" || incident.severity === "high") ? (
+                <>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                    className="h-5 w-5 rounded-full border-2 border-indigo-400 border-t-transparent"
+                  />
+                  <p className="text-slate-300">Calculating safest evacuation route...</p>
+                </>
+              ) : (
+                <p className="text-slate-300">Preparing incident instructions...</p>
+              )}
             </CardContent>
           </Card>
         )}

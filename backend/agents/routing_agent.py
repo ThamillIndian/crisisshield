@@ -3,7 +3,8 @@ from core.gemini import get_model
 
 
 ROUTING_PROMPT = """
-You are an evacuation routing AI for a hotel emergency system.
+You are a spatial evacuation routing AI for a hotel emergency system.
+Your goal is to map the safest path on a virtual 100x100 coordinate grid.
 
 Emergency:
 - Type: {incident_type}
@@ -16,25 +17,33 @@ Floor Layout:
 - Blocked exits: {blocked_exits}
 - Staircases: {staircases}
 
-Generate the safest evacuation route for guests on floor {floor}.
+TASK:
+1. Determine the best exit.
+2. Generate a step-by-step path.
+3. Assign (x, y) coordinates for EVERY step and key point on a 100x100 grid.
+   - (0,0) is Top-Left, (100,100) is Bottom-Right.
+   - Place Room {room} and the Exits logically (e.g. rooms along corridors, exits at building edges).
 
 Respond ONLY with valid JSON:
 {{
   "path": [
-    {{"step": 1, "instruction": "<clear step instruction>"}},
-    {{"step": 2, "instruction": "<clear step instruction>"}},
-    {{"step": 3, "instruction": "<clear step instruction>"}}
+    {{"step": 1, "instruction": "<text>", "x": <int>, "y": <int>}},
+    {{"step": 2, "instruction": "<text>", "x": <int>, "y": <int>}}
   ],
-  "exitUsed": "<exit label e.g. Exit C>",
-  "estimatedTimeSeconds": <integer>,
-  "warning": "<important safety warning or null>"
+  "spatialData": {{
+    "guestPos": {{"x": <int>, "y": <int>}},
+    "exitPos": {{"x": <int>, "y": <int>}},
+    "dangerPos": {{"x": <int>, "y": <int>}}
+  }},
+  "exitUsed": "<exit label>",
+  "estimatedTimeSeconds": <int>,
+  "warning": "<text or null>"
 }}
 
 Rules:
-- Never route through blocked exits
-- For fire: avoid elevators, use staircases
-- For medical: fastest route to ground floor
-- Keep instructions clear and brief
+- Never route through blocked exits.
+- For fire: avoid elevators, use staircases.
+- Ensure the path coordinates create a continuous logical line.
 """
 
 

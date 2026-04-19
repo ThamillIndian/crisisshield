@@ -110,22 +110,50 @@ async def handle_new_incident(req: ReportIncidentRequest) -> str:
         f"Tasks assigned to {len(assignments)} staff members"
     )
 
-    # ── Step 5: Routing Agent ─────────────────────────────────────────
-    exits = floor_data.get("exits", [])
-    available_exits = [e["label"] for e in exits if not e.get("blocked", False)]
-    blocked_exits = [e["label"] for e in exits if e.get("blocked", False)]
-    staircases = floor_data.get("staircases", ["Staircase A", "Staircase B"])
-
-    route_data = await generate_route(
-        incident_type=classification.type,
-        floor=req.floor,
-        room=req.room,
-        total_floors=floor_data.get("totalFloors", 5),
-        available_exits=available_exits,
-        blocked_exits=blocked_exits,
-        staircases=staircases,
+    # ── Step 5: Routing Agent (Conditional) ───────────────────────────
+    requires_evacuation = (
+        classification.type.lower() in ["fire", "structural"] or 
+        classification.severity.lower() == "critical"
     )
 
+    # Default spatial data for UI rendering
+    route_data = {
+        "path": [], 
+        "exitUsed": None, 
+        "estimatedTimeSeconds": 0,
+        "spatialData": {
+            "guestPos": {"x": 50, "y": 50}, # Default center
+            "exitPos": None,
+            "dangerPos": None
+        }
+    }
+    
+    if requires_evacuation:
+        exits = floor_data.get("exits", [])
+        available_exits = [e["label"] for e in exits if not e.get("blocked", False)]
+        blocked_exits = [e["label"] for e in exits if e.get("blocked", False)]
+        staircases = floor_data.get("staircases", ["Staircase A", "Staircase B"])
+
+        route_data = await generate_route(
+            incident_type=classification.type,
+            floor=req.floor,
+            room=req.room,
+            total_floors=floor_data.get("totalFloors", 5),
+            available_exits=available_exits,
+            blocked_exits=blocked_exits,
+            staircases=staircases,
+        )
+        await add_timeline_event(
+            incident_id,
+            f"Evacuation route generated via {route_data.get('exitUsed', 'Exit')}"
+        )
+    else:
+        await add_timeline_event(
+            incident_id,
+            f"Note: Evacuation not required. Providing {classification.type} safety protocols."
+        )
+
+    # Always create a route record to signal the frontend to stop the 'Loading' state
     await create_route({
         "incidentId": incident_id,
         "hotelId": req.hotelId,
@@ -134,10 +162,6 @@ async def handle_new_incident(req: ReportIncidentRequest) -> str:
         "isBlocked": False,
         "updatedAt": datetime.now(timezone.utc).isoformat(),
     })
-    await add_timeline_event(
-        incident_id,
-        f"Evacuation route generated via {route_data.get('exitUsed', 'Exit')}"
-    )
 
     # ── Step 6: Communication Agent — notify the reporting guest ──────
     route_instructions = " → ".join(

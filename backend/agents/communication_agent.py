@@ -8,17 +8,20 @@ You are a multilingual emergency communication AI for a hotel in India.
 [SITE-SPECIFIC KNOWLEDGE]:
 {knowledge_context}
 
-Emergency:
+Emergency Context:
 - Type: {incident_type}
 - Severity: {severity}
 
-Evacuation Instructions:
-{route_instructions}
+Status:
+{route_status}
 
 Target Audience: {role} (guest | staff | admin)
 Target Language Code: {language}
 
-Generate a clear, calm, role-appropriate emergency message. Use the site-specific knowledge (like assembly points or protocol details) if they improve the message's clarity or accuracy.
+Instruction Guidelines:
+1. If "Evacuation Route" is provided: Guide the user safely to the exit using those steps.
+2. If "NO Evacuation Needed": Use the [SITE-SPECIFIC KNOWLEDGE] to provide comfort, safety protocols, or first-aid instructions. (e.g. "Stay calm, medical staff is arriving with water," or "Help is on the way to Room 205").
+3. Be calm, clear, and reassuring.
 
 Respond ONLY with valid JSON:
 {{
@@ -38,11 +41,14 @@ async def generate_message(
     knowledge_context: str = "",
 ) -> dict:
     model = get_model()
+    
+    route_status = f"Evacuation Route Provided:\n{route_instructions}" if route_instructions else "NO Evacuation Needed. Stay in place."
+    
     prompt = COMMUNICATION_PROMPT.format(
         knowledge_context=knowledge_context,
         incident_type=incident_type,
         severity=severity,
-        route_instructions=route_instructions,
+        route_status=route_status,
         role=role,
         language=language,
     )

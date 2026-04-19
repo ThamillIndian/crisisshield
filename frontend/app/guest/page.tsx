@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "@/store/authStore";
@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { LANGUAGE_LABELS } from "@/types/user";
 import type { SupportedLanguage } from "@/types/user";
 import {
-  ShieldAlert, Mic, Type, Globe, LogOut, Loader2, ChevronRight,
+  ShieldAlert, Mic, Type, Globe, LogOut, Loader2, ChevronRight, Square,
 } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -22,10 +22,76 @@ export default function GuestHomePage() {
   const router = useRouter();
   const [textInput, setTextInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<"home" | "text">("home");
+  const [mode, setMode] = useState<"home" | "text" | "voice">("home");
+  const [isRecording, setIsRecording] = useState(false);
   const [language, setLanguage] = useState<SupportedLanguage>(
     (user?.language as SupportedLanguage) ?? "en"
   );
+
+  const mediaRecorder = useRef<MediaRecorder | null>(null);
+  const audioChunks = useRef<Blob[]>([]);
+
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder.current = new MediaRecorder(stream);
+      audioChunks.current = [];
+
+      mediaRecorder.current.ondataavailable = (event) => {
+        audioChunks.current.push(event.data);
+      };
+
+      mediaRecorder.current.onstop = async () => {
+        const audioBlob = new Blob(audioChunks.current, { type: "audio/wav" });
+        await handleVoiceUpload(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.current.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Microphone access denied:", err);
+      alert("Please allow microphone access to use voice reporting.");
+    }
+  }
+
+  function stopRecording() {
+    if (mediaRecorder.current && isRecording) {
+      mediaRecorder.current.stop();
+      setIsRecording(false);
+      setLoading(true);
+    }
+  }
+
+  async function handleVoiceUpload(blob: Blob) {
+    if (!user) return;
+    
+    const formData = new FormData();
+    formData.append("file", blob, "report.wav");
+    formData.append("userId", user.id);
+    formData.append("hotelId", user.hotelId);
+    formData.append("floor", String(user.floor || 1));
+    formData.append("room", user.roomNumber || "101");
+
+    try {
+      const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
+      const response = await fetch(`${BASE}/voice/report`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Voice report failed");
+      
+      const data = await response.json();
+      router.push(`/guest/evacuation?incidentId=${data.incidentId}`);
+    } catch (err: unknown) {
+      console.error(err);
+      alert("Failed to process voice report. Please try text reporting.");
+      setMode("home");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function reportPanic() {
     setLoading(true);
@@ -42,7 +108,7 @@ export default function GuestHomePage() {
       router.push(`/guest/evacuation?incidentId=${res.incidentId}`);
     } catch (err: unknown) {
       console.error(err);
-      alert(err instanceof Error ? err.message : "Failed to send emergency report. Please try again or find help immediately.");
+      alert(err instanceof Error ? err.message : "Failed to send emergency report.");
     } finally {
       setLoading(false);
     }
@@ -64,7 +130,7 @@ export default function GuestHomePage() {
       router.push(`/guest/evacuation?incidentId=${res.incidentId}`);
     } catch (err: unknown) {
       console.error(err);
-      alert(err instanceof Error ? err.message : "Failed to send emergency report. Please try again.");
+      alert(err instanceof Error ? err.message : "Failed to send emergency report.");
     } finally {
       setLoading(false);
     }
@@ -121,7 +187,6 @@ export default function GuestHomePage() {
               exit={{ opacity: 0, y: -20 }}
               className="w-full max-w-sm space-y-6"
             >
-              {/* Panic Button */}
               <div className="flex flex-col items-center space-y-3">
                 <p className="text-slate-400 text-sm uppercase tracking-widest">Emergency</p>
                 <motion.button
@@ -145,10 +210,9 @@ export default function GuestHomePage() {
                 </p>
               </div>
 
-              {/* Other options */}
               <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={() => router.push("/guest/report")}
+                  onClick={() => setMode("voice")}
                   className="flex flex-col items-center gap-2 rounded-xl border border-slate-600 bg-slate-700/50 p-4 hover:bg-slate-700 transition-colors"
                 >
                   <Mic className="h-6 w-6 text-indigo-400" />
@@ -163,7 +227,7 @@ export default function GuestHomePage() {
                 </button>
               </div>
             </motion.div>
-          ) : (
+          ) : mode === "text" ? (
             <motion.div
               key="text"
               initial={{ opacity: 0, y: 20 }}
@@ -202,6 +266,74 @@ export default function GuestHomePage() {
                   </Button>
                 </CardContent>
               </Card>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="voice"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="w-full max-w-sm flex flex-col items-center space-y-8"
+            >
+              <button
+                onClick={() => setMode("home")}
+                className="text-slate-400 hover:text-white text-sm flex items-center gap-1 self-start transition-colors"
+              >
+                ← Back
+              </button>
+
+              <div className="relative">
+                <AnimatePresence>
+                  {isRecording && (
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0.2, 0.5] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="absolute inset-0 bg-indigo-500 rounded-full"
+                    />
+                  )}
+                </AnimatePresence>
+                
+                <button
+                  onClick={isRecording ? stopRecording : startRecording}
+                  disabled={loading}
+                  className={`relative z-10 w-32 h-32 rounded-full flex items-center justify-center transition-all ${
+                    isRecording ? "bg-red-500" : "bg-indigo-600"
+                  } shadow-xl hover:scale-105 active:scale-95`}
+                >
+                  {loading ? (
+                    <Loader2 className="h-10 w-10 animate-spin text-white" />
+                  ) : isRecording ? (
+                    <Square className="h-10 w-10 text-white fill-current" />
+                  ) : (
+                    <Mic className="h-12 w-12 text-white" />
+                  )}
+                </button>
+              </div>
+
+              <div className="text-center space-y-2">
+                <h2 className="text-xl font-bold text-white">
+                  {isRecording ? "Listening..." : loading ? "Processing..." : "Tap to Speak"}
+                </h2>
+                <p className="text-slate-400 text-sm">
+                  {isRecording 
+                    ? "Speak in any language (Hindi, Tamil, etc.)" 
+                    : "Tell us what's happening calmly"}
+                </p>
+              </div>
+
+              {isRecording && (
+                <div className="flex gap-1 items-end h-8">
+                  {[...Array(5)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      animate={{ height: [10, 30, 10] }}
+                      transition={{ duration: 1, repeat: Infinity, delay: i * 0.1 }}
+                      className="w-1.5 bg-indigo-400 rounded-full"
+                    />
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
