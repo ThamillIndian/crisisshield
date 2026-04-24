@@ -163,6 +163,14 @@ async def handle_new_incident(req: ReportIncidentRequest) -> str:
         "updatedAt": datetime.now(timezone.utc).isoformat(),
     })
 
+    # ── Step 5.1: Update Incident with Spatial Data ───────────────────
+    # Store the latest spatial summary in the incident for Admin Command Center visualization
+    await update_incident(incident_id, {
+        "spatialData": route_data.get("spatialData"),
+        "exitUsed": route_data.get("exitUsed"),
+        "estimatedTimeSeconds": route_data.get("estimatedTimeSeconds", 0)
+    })
+
     # ── Step 6: Communication Agent — notify the reporting guest ──────
     route_instructions = " → ".join(
         [s["instruction"] for s in route_data.get("path", [])]

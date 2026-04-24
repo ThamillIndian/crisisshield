@@ -29,6 +29,9 @@ Severity guidelines:
 """
 
 
+from core.gemini import get_model, clean_json
+
+
 async def classify_incident(
     raw_input: str,
     language: str,
@@ -45,5 +48,5 @@ async def classify_incident(
         room=room,
     )
     response = model.generate_content(prompt)
-    data = json.loads(response.text)
+    data = json.loads(clean_json(response.text))
     return IncidentClassification(**data)

@@ -29,4 +29,11 @@ export interface Incident {
   resolvedAt?: string;
   resolvedBy?: string;
   timeline: TimelineEvent[];
+  spatialData?: {
+    guestPos: { x: number; y: number };
+    exitPos?: { x: number; y: number } | null;
+    dangerPos?: { x: number; y: number } | null;
+  };
+  exitUsed?: string;
+  estimatedTimeSeconds?: number;
 }

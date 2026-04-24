@@ -18,6 +18,8 @@ import {
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
+import { AdminSituationalMap } from "@/components/AdminSituationalMap";
+import { MapPin } from "lucide-react";
 
 const INCIDENT_ICON = {
   fire: <Flame className="h-4 w-4 text-red-400" />,
@@ -172,9 +174,17 @@ export default function AdminDashboard() {
             </div>
 
             {/* Incident detail */}
-            {selectedIncident && (
-              <div className="lg:col-span-2 space-y-4">
-                {/* Overview */}
+            <div className="lg:col-span-2 space-y-4">
+              {/* Situational Map */}
+              <AdminSituationalMap 
+                incidents={incidents} 
+                selectedId={selectedId}
+                onSelectIncident={(id) => setSelectedId(id)}
+              />
+
+              {selectedIncident ? (
+                <div className="space-y-4">
+                  {/* Overview */}
                 <Card className="bg-gray-800 border-gray-700">
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -311,8 +321,16 @@ export default function AdminDashboard() {
                     </Button>
                   </CardContent>
                 </Card>
-              </div>
-            )}
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center border border-dashed border-gray-800 rounded-2xl py-12">
+                  <div className="h-12 w-12 rounded-full bg-gray-900 flex items-center justify-center mb-3">
+                    <MapPin className="h-6 w-6 text-gray-700" />
+                  </div>
+                  <p className="text-gray-500 text-sm">Select an incident to view deep diagnostics</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

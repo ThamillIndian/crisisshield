@@ -32,6 +32,9 @@ Respond ONLY with valid JSON:
 """
 
 
+from core.gemini import get_model, clean_json
+
+
 async def generate_message(
     incident_type: str,
     severity: str,
@@ -53,4 +56,4 @@ async def generate_message(
         language=language,
     )
     response = model.generate_content(prompt)
-    return json.loads(response.text)
+    return json.loads(clean_json(response.text))

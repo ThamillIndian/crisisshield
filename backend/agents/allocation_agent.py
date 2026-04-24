@@ -39,6 +39,9 @@ Assign tasks to ALL relevant staff. Skip irrelevant roles.
 """
 
 
+from core.gemini import get_model, clean_json
+
+
 async def allocate_resources(
     incident_type: str,
     severity: str,
@@ -65,5 +68,5 @@ async def allocate_resources(
         staff_list=staff_text,
     )
     response = model.generate_content(prompt)
-    data = json.loads(response.text)
+    data = json.loads(clean_json(response.text))
     return data.get("assignments", [])

@@ -47,6 +47,9 @@ Rules:
 """
 
 
+from core.gemini import get_model, clean_json
+
+
 async def generate_route(
     incident_type: str,
     floor: int,
@@ -67,4 +70,4 @@ async def generate_route(
         staircases=", ".join(staircases) or "None",
     )
     response = model.generate_content(prompt)
-    return json.loads(response.text)
+    return json.loads(clean_json(response.text))

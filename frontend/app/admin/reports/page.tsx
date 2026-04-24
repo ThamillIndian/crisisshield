@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Loader2, ScrollText, Calendar, Clock, 
   ChevronRight, ArrowLeft, CheckCircle2, 
-  HelpCircle, Zap, ShieldCheck, Activity
+  HelpCircle, Zap, ShieldCheck, Activity, ShieldAlert
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -30,7 +30,7 @@ export default function IncidentArchives() {
     setError("");
     try {
       const data = await api.get(`/reports/hotel/${user?.hotelId}`);
-      setReports(data || []);
+      setReports(Array.isArray(data) ? data : []);
     } catch (err: any) {
       console.error("Failed to fetch reports:", err);
       setError("Unable to connect to the archive system. Please check your connection.");
@@ -88,7 +88,7 @@ export default function IncidentArchives() {
                   <h1 className="text-2xl font-bold">Incident Archives</h1>
                   <p className="text-gray-400 text-sm">Review past emergency responses and AI-generated performance audits.</p>
                 </div>
-                <Badge variant={reports.length > 0 ? "secondary" : "outline"} className="px-3 py-1">
+                <Badge variant={reports.length > 0 ? "default" : "outline"} className="px-3 py-1">
                   {reports.length} Total Reports
                 </Badge>
               </div>
