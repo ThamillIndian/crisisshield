@@ -6,7 +6,7 @@
 
 ## 🎯 Problem Statement
 
-In hospitality venues (hotels), emergencies like fire, medical, and security threats lead to chaos due to fragmented communication. CrisisShield solves this with real-time AI-powered coordination.
+In hospitality venues (hotels), emergencies like fire, medical, and security threats lead to chaos due to fragmented communication. CrisisShield solves this with real-time AI-powered coordination..
 
 ---
 
