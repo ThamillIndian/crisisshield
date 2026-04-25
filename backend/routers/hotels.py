@@ -24,7 +24,7 @@ async def fetch_knowledge(hotel_id: str):
 @router.patch("/{hotel_id}/knowledge")
 async def update_knowledge(hotel_id: str, req: KnowledgeUpdateRequest):
     try:
-        # Filter out None values to perform a partial, update
+        # Filter out None values to perform a partial update
         update_data = {k: v for k, v in req.dict().items() if v is not None}
         if not update_data:
             return {"status": "no change"}
