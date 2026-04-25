@@ -37,27 +37,30 @@ async def speech_to_english(audio_bytes: bytes) -> str:
     audio_file = io.BytesIO(audio_bytes)
     audio_file.name = "audio.wav"
 
+    transcript = ""
+
+    # ATTEMPT 1: Saaras:v3 with raw STT for SDK compatibility.
+    # Some deployed Sarvam SDK versions do not accept custom kwargs like mode="translate".
     try:
-        # ATTEMPT 1: Saaras:v3 with automatic translation
-        print("[SARVAM DEBUG] Attempt 1: Saaras:v3 (Translate mode)...")
+        print("[SARVAM DEBUG] Attempt 1: Saaras:v3 (Raw STT mode)...")
         response = client.speech_to_text.transcribe(
             file=audio_file,
-            model="saaras:v3",
-            mode="translate"
+            model="saaras:v3"
         )
-        
-        transcript = ""
         if isinstance(response, dict):
             transcript = response.get("transcript", "")
         else:
             transcript = getattr(response, "transcript", "")
-        
+
         if transcript:
             print(f"[SARVAM DEBUG] Attempt 1 Success: \"{transcript}\"")
             return transcript
+    except Exception as e:
+        print(f"[SARVAM DEBUG] Attempt 1 Error: {e}")
 
-        # ATTEMPT 2: Fallback to raw transcription (no translation mode)
-        print("[SARVAM DEBUG] Attempt 2: Saaras:v3 (Raw STT mode)...")
+    # ATTEMPT 2: Retry after rewinding stream (defensive for stream-read quirks).
+    try:
+        print("[SARVAM DEBUG] Attempt 2: Saaras:v3 retry after rewind...")
         audio_file.seek(0)
         response = client.speech_to_text.transcribe(
             file=audio_file,
@@ -71,33 +74,34 @@ async def speech_to_english(audio_bytes: bytes) -> str:
         if transcript:
             print(f"[SARVAM DEBUG] Attempt 2 Success: \"{transcript}\"")
             return transcript
-            
-        # ATTEMPT 3: GEMINI SUPREME FALLBACK (The most robust)
-        # Using Gemini's multimodal capabilities to "listen" to the audio if specialized models fail.
+    except Exception as e:
+        print(f"[SARVAM DEBUG] Attempt 2 Error: {e}")
+
+    # ATTEMPT 3: GEMINI SUPREME FALLBACK (The most robust)
+    # Using Gemini's multimodal capabilities to "listen" to the audio if specialized models fail.
+    try:
         print("[SARVAM DEBUG] Attempt 3: Gemini Multimodal Fallback...")
-        from core.gemini import get_model
         # We need a new model instance without the JSON constraint for raw transcription
         import google.generativeai as genai
         audio_model = genai.GenerativeModel("gemini-1.5-flash")
-        
+
         prompt = "Listen to this audio and transcribe exactly what is said. Respond ONLY with the transcript text. If nothing is said, respond with nothing."
         audio_data = {
             "mime_type": "audio/wav",
             "data": audio_bytes
         }
-        
+
         response = audio_model.generate_content([prompt, audio_data])
         transcript = response.text.strip()
-        
+
         if transcript:
             print(f"[SARVAM DEBUG] Attempt 3 (Gemini) Success: \"{transcript}\"")
             return transcript
-
-        print("[SARVAM DEBUG] All STT attempts yielded empty strings.")
-        return ""
     except Exception as e:
-        print(f"\n❌ SARVAM/GEMINI STT ERROR: {e}")
-        return ""
+        print(f"[SARVAM DEBUG] Attempt 3 Error: {e}")
+
+    print("[SARVAM DEBUG] All STT attempts yielded empty strings.")
+    return ""
 
 
 async def text_to_speech(text: str, language: str = "hi-IN") -> bytes:
