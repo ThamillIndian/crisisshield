@@ -5,6 +5,7 @@ from agents.classification_agent import classify_incident
 from agents.allocation_agent import allocate_resources
 from agents.routing_agent import generate_route
 from agents.communication_agent import generate_message
+from agents.location_agent import extract_incident_location
 from services.firestore_service import (
     create_incident,
     update_incident,
@@ -27,6 +28,35 @@ async def handle_new_incident(req: ReportIncidentRequest) -> str:
     start_ms = int(time.time() * 1000)
     now = datetime.now(timezone.utc).isoformat()
 
+    # ── Step 0: Infer incident location (can differ from reporter location) ──
+    reporter_floor = req.floor
+    reporter_room = req.room
+
+    extracted_location = await extract_incident_location(
+        raw_input=req.rawInput,
+        language=req.language,
+        reporter_floor=reporter_floor,
+        reporter_room=reporter_room,
+    )
+
+    use_extracted_location = (
+        extracted_location.confidence >= 0.7
+        and (
+            extracted_location.incident_floor is not None
+            or bool(extracted_location.incident_room)
+        )
+    )
+    incident_floor = (
+        extracted_location.incident_floor
+        if use_extracted_location and extracted_location.incident_floor is not None
+        else reporter_floor
+    )
+    incident_room = (
+        extracted_location.incident_room
+        if use_extracted_location and extracted_location.incident_room
+        else reporter_room
+    )
+
     # ── Step 1: Create incident record in Firestore ──────────────────
     incident_id = await create_incident({
         "hotelId": req.hotelId,
@@ -38,7 +68,10 @@ async def handle_new_incident(req: ReportIncidentRequest) -> str:
         "type": "unknown",
         "severity": "medium",
         "confidence": 0.0,
-        "location": {"floor": req.floor, "room": req.room},
+        "location": {"floor": incident_floor, "room": incident_room},
+        "reporterLocation": {"floor": reporter_floor, "room": reporter_room},
+        "locationSource": "parsed_text" if use_extracted_location else "reporter_profile",
+        "locationConfidence": extracted_location.confidence,
         "status": "active",
         "timeline": [{"time": now, "event": "Incident reported by guest"}],
     })
@@ -48,8 +81,8 @@ async def handle_new_incident(req: ReportIncidentRequest) -> str:
         raw_input=req.rawInput,
         language=req.language,
         hotel_id=req.hotelId,
-        floor=req.floor,
-        room=req.room,
+        floor=incident_floor,
+        room=incident_room,
     )
     classification_ms = int(time.time() * 1000) - start_ms
 
@@ -64,10 +97,18 @@ async def handle_new_incident(req: ReportIncidentRequest) -> str:
         f"AI classified as {classification.type.upper()} — {classification.severity.upper()} "
         f"(confidence: {int(classification.confidence * 100)}%)"
     )
+    if use_extracted_location and (
+        incident_floor != reporter_floor or str(incident_room) != str(reporter_room)
+    ):
+        await add_timeline_event(
+            incident_id,
+            f"Location interpreted from report text: incident at Floor {incident_floor}, Room {incident_room} "
+            f"(reporter at Floor {reporter_floor}, Room {reporter_room})"
+        )
 
     # ── Step 3: Get hotel data & Knowledge Base ──────────────────────
     staff_list = await get_hotel_staff(req.hotelId)
-    floor_data = await get_hotel_floor_data(req.hotelId, req.floor)
+    floor_data = await get_hotel_floor_data(req.hotelId, incident_floor)
     
     # Get Site-Specific Grounding for the LLM
     knowledge_context = await knowledge_service.get_context_for_incident(
@@ -79,8 +120,8 @@ async def handle_new_incident(req: ReportIncidentRequest) -> str:
     assignments = await allocate_resources(
         incident_type=classification.type,
         severity=classification.severity,
-        floor=req.floor,
-        room=req.room,
+        floor=incident_floor,
+        room=incident_room,
         summary=classification.summary_en,
         staff_list=staff_list,
         knowledge_context=knowledge_context  # Pass knowledge here
@@ -136,8 +177,8 @@ async def handle_new_incident(req: ReportIncidentRequest) -> str:
 
         route_data = await generate_route(
             incident_type=classification.type,
-            floor=req.floor,
-            room=req.room,
+            floor=incident_floor,
+            room=incident_room,
             total_floors=floor_data.get("totalFloors", 5),
             available_exits=available_exits,
             blocked_exits=blocked_exits,
@@ -157,7 +198,7 @@ async def handle_new_incident(req: ReportIncidentRequest) -> str:
     await create_route({
         "incidentId": incident_id,
         "hotelId": req.hotelId,
-        "floor": req.floor,
+        "floor": incident_floor,
         **route_data,
         "isBlocked": False,
         "updatedAt": datetime.now(timezone.utc).isoformat(),

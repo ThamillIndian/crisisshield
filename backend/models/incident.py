@@ -14,6 +14,13 @@ class IncidentLocation(BaseModel):
     zone: Optional[str] = None
 
 
+class LocationExtractionResult(BaseModel):
+    incident_floor: Optional[int] = None
+    incident_room: Optional[str] = None
+    confidence: float = 0.0
+    reason: str = ""
+
+
 class TimelineEvent(BaseModel):
     time: str
     event: str
@@ -49,6 +56,9 @@ class Incident(BaseModel):
     severity: IncidentSeverity
     confidence: float
     location: IncidentLocation
+    reporterLocation: Optional[IncidentLocation] = None
+    locationSource: Optional[Literal["parsed_text", "reporter_profile"]] = None
+    locationConfidence: Optional[float] = None
     status: IncidentStatus
     resolvedAt: Optional[str] = None
     resolvedBy: Optional[str] = None

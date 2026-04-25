@@ -25,6 +25,9 @@ export interface Incident {
   severity: IncidentSeverity;
   confidence: number;
   location: IncidentLocation;
+  reporterLocation?: IncidentLocation;
+  locationSource?: "parsed_text" | "reporter_profile";
+  locationConfidence?: number;
   status: IncidentStatus;
   resolvedAt?: string;
   resolvedBy?: string;
