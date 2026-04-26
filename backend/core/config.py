@@ -13,7 +13,9 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        env_file_encoding = "utf-8"
         extra = "ignore"
+        case_sensitive = False # Ensures GEMINI_API_KEY maps to gemini_api_key
 
 
 settings = Settings()

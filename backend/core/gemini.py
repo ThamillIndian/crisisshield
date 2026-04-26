@@ -6,6 +6,9 @@ _model = None
 
 
 def init_gemini() -> None:
+    if not settings.gemini_api_key:
+        print("⚠️ WARNING: GEMINI_API_KEY is not set. AI features will fail.")
+        return
     genai.configure(api_key=settings.gemini_api_key)
 
 
