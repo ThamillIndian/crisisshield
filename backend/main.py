@@ -38,6 +38,16 @@ app.include_router(voice.router)
 app.include_router(reports.router)
 app.include_router(hotels.router)
 
+@app.get("/")
+async def root():
+    return {
+        "message": "Welcome to the CrisisShield API",
+        "status": "online",
+        "documentation": "/docs",
+        "health": "/health"
+    }
+
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "CrisisShield API"}

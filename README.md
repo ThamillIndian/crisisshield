@@ -4,7 +4,7 @@
 > Built for the Google Solution Challenge 2026.
 
 [![Frontend](https://img.shields.io/badge/Live-Frontend-blue?style=for-the-badge&logo=vercel)](https://crisisshield.vercel.app)
-[![Backend](https://img.shields.io/badge/Live-API-green?style=for-the-badge&logo=googlecloud)](https://crisisshield-backend.asia-south1.run.app)
+[![Backend](https://img.shields.io/badge/Live-API-green?style=for-the-badge&logo=googlecloud)](https://crisisshield-backend-858631446681.asia-south1.run.app)
 [![Google Stack](https://img.shields.io/badge/Powered%20By-Google-4285F4?style=for-the-badge&logo=google)](https://cloud.google.com)
 
 ---
