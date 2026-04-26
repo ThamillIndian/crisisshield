@@ -1,89 +1,91 @@
-# 🚨 CrisisShield — AI-Powered Crisis Coordination System
+# 🚨 CrisisShield — AI-Powered Crisis Coordination
 
-> An AI-powered multi-agent emergency response system for hospitality venues, built for the Google Solution Challenge 2026.
+> **Revolutionizing hospitality emergency response with Google-backed multi-agent intelligence.**
+> Built for the Google Solution Challenge 2026.
 
----
-
-## 🎯 Problem Statement
-
-In hospitality venues (hotels), emergencies like fire, medical, and security threats lead to chaos due to fragmented communication. CrisisShield solves this with real-time AI-powered coordination..
-
----
-
-## 🏗️ Tech Stack
-
-| Layer | Technologies |
-|---|---|
-| Frontend | Next.js 14, TailwindCSS, shadcn/ui, Leaflet.js |
-| Backend | FastAPI, Python 3.11, Pydantic |
-| AI | Gemini 3 Flash (Google), Sarvam AI (STT/TTS) |
-| Database | Firebase Firestore, Firebase Auth, FCM |
-| Deployment | Vercel (frontend), Google Cloud Run (backend) |
+[![Frontend](https://img.shields.io/badge/Live-Frontend-blue?style=for-the-badge&logo=vercel)](https://crisisshield.vercel.app)
+[![Backend](https://img.shields.io/badge/Live-API-green?style=for-the-badge&logo=googlecloud)](https://crisisshield-backend.asia-south1.run.app)
+[![Google Stack](https://img.shields.io/badge/Powered%20By-Google-4285F4?style=for-the-badge&logo=google)](https://cloud.google.com)
 
 ---
 
-## 📁 Project Structure
+![CrisisShield Banner](assets/banner.png)
 
-```
-crisis-shield/
-├── frontend/       # Next.js app (Guest, Staff, Admin portals)
-├── backend/        # FastAPI app (AI agents, API routes)
-├── firebase/       # Firestore rules and indexes
-└── .github/        # CI/CD workflows
-```
+## 🎯 The Mission
+In hospitality environments, seconds matter. **CrisisShield** eliminates chaos by orchestrating a unified, AI-driven response to fire, medical, and security threats, ensuring guest safety through real-time coordination.
 
 ---
 
-## 🚀 Getting Started
+## 🧠 Google Cloud & AI Stack
+CrisisShield leverages a unified Google ecosystem for mission-critical reliability.
 
-### Prerequisites
-- Node.js 18+
-- Python 3.11+
-- Firebase project
-- Gemini API key
-- Sarvam AI API key
+| Component | Technology | Usage |
+|---|---|---|
+| **Core AI** | **Gemini 3 Flash** | Classification, severity analysis, task recommendation, and multilingual-safe response drafting. |
+| **Backend** | **Cloud Run** | Scalable, low-latency API execution for high-pressure incident orchestration. |
+| **Database** | **Firestore** | Real-time state management for incidents, task timelines, and spatial data. |
+| **Auth** | **Firebase Auth** | Secure, role-based identity for guests, staff, and command center admins. |
+| **Messaging** | **FCM** | Instant emergency notifications and dynamic evacuation updates. |
 
-### Frontend Setup
-```bash
-cd frontend
-npm install
-cp .env.example .env.local
-npm run dev
-```
+*Engineered with **Antigravity IDE** — AI-assisted environment for rapid development.*
 
-### Backend Setup
-```bash
-cd backend
-python -m venv venv
-venv\Scripts\activate   # Windows
-pip install -r requirements.txt
-cp .env.example .env
-uvicorn main:app --reload
-```
+---
+
+## 🛠️ Key Capabilities
+- **Multi-Agent Orchestration**: Specialized agents for Classification, Routing, and Communication.
+- **Dynamic Evacuation**: Real-time rerouting based on blocked exits and incident proximity.
+- **Multilingual Support**: AI-powered safety instructions in the guest's native language.
+- **Post-Incident Review**: Automated Gemini-summarized reports for protocol optimization.
 
 ---
 
 ## 🌍 SDG Alignment
-
-- **SDG 11** — Sustainable Cities and Communities
-- **SDG 3** — Good Health and Well-Being
-
----
-
-## 🔑 Environment Variables
-
-See `.env.example` for all required environment variables.
+- **SDG 11: Sustainable Cities & Communities** — Enhancing urban resilience through optimized emergency response.
+- **SDG 3: Good Health & Well-Being** — Accelerating medical intervention in critical hospitality incidents.
 
 ---
 
-## 👥 User Roles
+## 🚀 Deployment & Setup
 
-| Role | Access |
-|---|---|
-| Guest | Report emergency, receive evacuation route |
-| Staff | Receive task assignments, update task status |
-| Admin | Full command center dashboard |
+<details>
+<summary><b>Frontend (Next.js)</b></summary>
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+</details>
+
+<details>
+<summary><b>Backend (FastAPI)</b></summary>
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+</details>
 
 ---
 
-## 🏆 Google Solution Challenge 2026
+## 🏗️ Architecture
+```mermaid
+graph TD
+    A[Guest/Staff Report] --> B[FastAPI Orchestrator]
+    B --> C{Gemini AI}
+    C -->|Classify| D[Incident State]
+    C -->|Recommend| E[Staff Tasks]
+    C -->|Draft| F[Guest Instructions]
+    D --> G[Firestore Real-time DB]
+    E --> H[Firebase Cloud Messaging]
+    F --> H
+    G --> I[Command Center Dashboard]
+```
+
+---
+
+<p align="center">
+  <b>Google Solution Challenge 2026</b><br>
+  <i>Safety through Intelligence.</i>
+</p>
