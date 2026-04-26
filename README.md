@@ -87,5 +87,7 @@ graph TD
 
 <p align="center">
   <b>Google Solution Challenge 2026</b><br>
-  <i>Safety through Intelligence.</i>
+  <i>Safety through Intelligence.</i><br>
+  <b>Team: SoloHack</b> | Member: Thamill Indian B U<br>
+  <b>Google Cloud Project ID:</b> crisisshield
 </p>
