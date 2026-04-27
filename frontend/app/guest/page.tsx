@@ -74,10 +74,11 @@ export default function GuestHomePage() {
     formData.append("room", user.roomNumber || "101");
 
     try {
-      const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
-      console.log(`[DEBUG] Sending voice report to: ${BASE}/voice/report`);
+      const BASE = (process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000").replace(/\/$/, "");
+      const url = `${BASE}/voice/report`;
+      console.log(`[DEBUG] Sending voice report to: ${url}`);
       
-      const response = await fetch(`${BASE}/voice/report`, {
+      const response = await fetch(url, {
         method: "POST",
         body: formData,
       });

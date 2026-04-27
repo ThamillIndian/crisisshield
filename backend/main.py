@@ -8,16 +8,20 @@ from core.gemini import init_gemini
 # Import all routers at once to avoid redundancy
 from routers import incidents, tasks, notifications, voice, reports, hotels
 
+# Clean up origins to remove any accidental spaces or trailing slashes
+raw_origins = settings.allowed_origins.split(",")
+origins = [o.strip().rstrip("/") for o in raw_origins]
+
 app = FastAPI(
     title="CrisisShield API",
-    description="AI-Powered Crisis Coordination System for Hospitality Venues",
+    description="Multi-Agent Crisis Orchestration Backend",
     version="1.0.0",
+    redirect_slashes=False # Prevent 307 redirects which can break CORS preflight
 )
 
-# ── CORS ──────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.allowed_origins.split(","),
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
