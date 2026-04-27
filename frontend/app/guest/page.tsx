@@ -75,18 +75,29 @@ export default function GuestHomePage() {
 
     try {
       const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
+      console.log(`[DEBUG] Sending voice report to: ${BASE}/voice/report`);
+      
       const response = await fetch(`${BASE}/voice/report`, {
         method: "POST",
         body: formData,
       });
 
-      if (!response.ok) throw new Error("Voice report failed");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Server returned ${response.status}`);
+      }
       
       const data = await response.json();
+      console.log("[DEBUG] Voice report success:", data);
+      
+      if (!data.incidentId) {
+        throw new Error("No incident ID received from server");
+      }
+
       router.push(`/guest/evacuation?incidentId=${data.incidentId}`);
-    } catch (err: unknown) {
-      console.error(err);
-      alert("Failed to process voice report. Please try text reporting.");
+    } catch (err: any) {
+      console.error("Voice report error:", err);
+      alert(`Voice report failed: ${err.message || "Unknown error"}`);
       setMode("home");
     } finally {
       setLoading(false);
